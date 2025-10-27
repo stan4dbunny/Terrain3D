@@ -48,6 +48,11 @@ private:
 	Ref<Image> _height_map;
 	Ref<Image> _control_map;
 	Ref<Image> _color_map;
+
+	Ref<Image> _compressed_height_map;
+	Ref<Image> _compressed_control_map;
+	Ref<Image> _compressed_color_map;
+
 	// Instancer
 	Dictionary _instances; // Meshes{int} -> Cells{v2i} -> [ Transform3D, Color, Modified ]
 	real_t _vertex_spacing = 1.f; // Spacing that instancer transforms are currently scaled by.
@@ -95,6 +100,12 @@ public:
 	void set_vertex_spacing(const real_t p_vertex_spacing) { _vertex_spacing = CLAMP(p_vertex_spacing, 0.25f, 100.f); }
 	real_t get_vertex_spacing() const { return _vertex_spacing; }
 
+<<<<<<< HEAD
+=======
+	// File I/O
+	Error save(const String &p_path = "", const bool p_16_bit = false, const bool p_compressed_color_map = false);
+
+>>>>>>> 5c972a1 (regions are marked as modified when use_compress_color_map is set)
 	// Working Data
 	void set_deleted(const bool p_deleted) { _deleted = p_deleted; }
 	bool is_deleted() const { return _deleted; }

@@ -278,7 +278,7 @@ void Terrain3DRegion::set_location(const Vector2i &p_location) {
 	LOG(INFO, "Set location: ", p_location);
 }
 
-Error Terrain3DRegion::save(const String &p_path, const bool p_16_bit) {
+Error Terrain3DRegion::save(const String &p_path, const bool p_16_bit, const bool p_compressed_color_map) {
 	// Initiate save to external file. The scene will save itself.
 	if (_location.x == INT32_MAX) {
 		LOG(ERROR, "Region has not been setup. Location is INT32_MAX. Skipping ", p_path);
@@ -307,6 +307,9 @@ Error Terrain3DRegion::save(const String &p_path, const bool p_16_bit) {
 		_height_map->convert(Image::FORMAT_RH);
 		err = ResourceSaver::get_singleton()->save(this, get_path(), ResourceSaver::FLAG_COMPRESS);
 		_height_map = original_map;
+	} else if (p_compressed_color_map) {
+		LOG(INFO, "use comprssion!!");
+		print_line("tgryreg");
 	} else {
 		err = ResourceSaver::get_singleton()->save(this, get_path(), ResourceSaver::FLAG_COMPRESS);
 	}
@@ -455,7 +458,7 @@ void Terrain3DRegion::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_instances", "instances"), &Terrain3DRegion::set_instances);
 	ClassDB::bind_method(D_METHOD("get_instances"), &Terrain3DRegion::get_instances);
 
-	ClassDB::bind_method(D_METHOD("save", "path", "save_16_bit"), &Terrain3DRegion::save, DEFVAL(""), DEFVAL(false));
+	ClassDB::bind_method(D_METHOD("save", "path", "save_16_bit", "use_compressed_color_map"), &Terrain3DRegion::save, DEFVAL(""), DEFVAL(false));
 
 	ClassDB::bind_method(D_METHOD("set_deleted", "deleted"), &Terrain3DRegion::set_deleted);
 	ClassDB::bind_method(D_METHOD("is_deleted"), &Terrain3DRegion::is_deleted);
