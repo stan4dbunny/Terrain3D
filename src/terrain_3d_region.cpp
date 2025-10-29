@@ -65,6 +65,9 @@ Ref<Image> Terrain3DRegion::get_map(const MapType p_map_type) const {
 		case TYPE_CONTROL:
 			return get_control_map();
 		case TYPE_COLOR:
+			if (_compressed_color_map.is_valid()) {
+				return get_compressed_color_map();
+			}
 			return get_color_map();
 		default:
 			LOG(ERROR, "Requested map type ", p_map_type, ", is invalid");
@@ -147,6 +150,19 @@ void Terrain3DRegion::set_color_map(const Ref<Image> &p_map) {
 		_modified = true;
 	}
 	_color_map = map;
+}
+
+void Terrain3DRegion::set_compressed_color_map(const Ref<Image> &p_map) {
+	LOG(INFO, "Setting compressed color map for region: ", (_location.x != INT32_MAX) ? String(_location) : "(new)");
+	if (_region_size == 0 && p_map.is_valid()) {
+		set_region_size(p_map->get_width());
+	}
+	Ref<Image> map = p_map;
+	// If already initialized and receiving a new map, or the map was sanitized
+	if (_compressed_color_map.is_valid() && _compressed_color_map != p_map || map != p_map) {
+		_modified = true;
+	}
+	_compressed_color_map = map;
 }
 
 void Terrain3DRegion::sanitize_maps() {
@@ -308,8 +324,21 @@ Error Terrain3DRegion::save(const String &p_path, const bool p_16_bit, const boo
 		err = ResourceSaver::get_singleton()->save(this, get_path(), ResourceSaver::FLAG_COMPRESS);
 		_height_map = original_map;
 	} else if (p_compressed_color_map) {
-		LOG(INFO, "use comprssion!!");
-		print_line("tgryreg");
+		if (!_compressed_color_map.is_valid()) {
+			_compressed_color_map = Image::create_empty(_color_map->get_width(), _color_map->get_height(), _color_map->has_mipmaps(), _color_map->get_format());	
+		}
+		_compressed_color_map->copy_from(_color_map);
+		_compressed_color_map->compress(Image::COMPRESS_BPTC, Image::COMPRESS_SOURCE_SRGB);
+		_color_map.unref();
+		err = ResourceSaver::get_singleton()->save(this, get_path(), ResourceSaver::FLAG_COMPRESS);
+	} else if (!p_compressed_color_map) {
+		if (_compressed_color_map.is_valid()) {
+			_color_map->copy_from(_compressed_color_map);
+			_color_map->decompress();
+			_compressed_color_map.unref();
+		}
+		
+		err = ResourceSaver::get_singleton()->save(this, get_path(), ResourceSaver::FLAG_COMPRESS);
 	} else {
 		err = ResourceSaver::get_singleton()->save(this, get_path(), ResourceSaver::FLAG_COMPRESS);
 	}
@@ -338,6 +367,7 @@ void Terrain3DRegion::set_data(const Dictionary &p_data) {
 	SET_IF_HAS(_height_map, "height_map");
 	SET_IF_HAS(_control_map, "control_map");
 	SET_IF_HAS(_color_map, "color_map");
+	SET_IF_HAS(_compressed_color_map, "compressed_color_map");
 	SET_IF_HAS(_instances, "instances");
 }
 
@@ -445,6 +475,8 @@ void Terrain3DRegion::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_control_map"), &Terrain3DRegion::get_control_map);
 	ClassDB::bind_method(D_METHOD("set_color_map", "map"), &Terrain3DRegion::set_color_map);
 	ClassDB::bind_method(D_METHOD("get_color_map"), &Terrain3DRegion::get_color_map);
+	ClassDB::bind_method(D_METHOD("set_compressed_color_map", "map"), &Terrain3DRegion::set_compressed_color_map);
+	ClassDB::bind_method(D_METHOD("get_compressed_color_map"), &Terrain3DRegion::get_compressed_color_map);
 	ClassDB::bind_method(D_METHOD("sanitize_maps"), &Terrain3DRegion::sanitize_maps);
 	ClassDB::bind_method(D_METHOD("sanitize_map", "map_type", "map"), &Terrain3DRegion::sanitize_map);
 	ClassDB::bind_method(D_METHOD("validate_map_size", "map"), &Terrain3DRegion::validate_map_size);
@@ -482,6 +514,7 @@ void Terrain3DRegion::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "height_map", PROPERTY_HINT_RESOURCE_TYPE, "Image", ro_flags), "set_height_map", "get_height_map");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "control_map", PROPERTY_HINT_RESOURCE_TYPE, "Image", ro_flags), "set_control_map", "get_control_map");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "color_map", PROPERTY_HINT_RESOURCE_TYPE, "Image", ro_flags), "set_color_map", "get_color_map");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "compressed_color_map", PROPERTY_HINT_RESOURCE_TYPE, "Image", ro_flags), "set_compressed_color_map", "get_compressed_color_map");
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "instances", PROPERTY_HINT_NONE, "", ro_flags), "set_instances", "get_instances");
 
 	// Double-clicking a region .res file shows what's on disk, the defaults, not in memory. So these are hidden
