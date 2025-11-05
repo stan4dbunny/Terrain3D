@@ -546,6 +546,7 @@ void Terrain3D::set_region_size(const RegionSize p_size) {
 }
 
 void Terrain3D::set_save_16_bit(const bool p_enabled) {
+<<<<<<< HEAD
 	SET_IF_DIFF(_save_16_bit, p_enabled);
 	LOG(INFO, "Save heightmaps as 16-bit: ", _save_16_bit);
 	TypedArray<Terrain3DRegion> regions = _data->get_regions_active();
@@ -553,6 +554,10 @@ void Terrain3D::set_save_16_bit(const bool p_enabled) {
 		Ref<Terrain3DRegion> region = regions[i];
 		region->set_modified(true);
 	}
+=======
+	LOG(INFO, p_enabled);
+	_save_16_bit = p_enabled;	
+>>>>>>> 486b56f (compressed color map working)
 }
 
 void Terrain3D::set_use_compressed_color_map(const bool p_enabled) {
