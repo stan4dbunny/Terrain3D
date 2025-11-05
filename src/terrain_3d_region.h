@@ -49,7 +49,7 @@ private:
 	Ref<Image> _control_map;
 	Ref<Image> _color_map;
 
-	Ref<Image> _16_bit_height_map;
+	Ref<Image> _compressed_height_map;
 	Ref<Image> _compressed_control_map;
 	Ref<Image> _compressed_color_map;
 
@@ -84,8 +84,6 @@ public:
 	Ref<Image> get_control_map() const { return _control_map; }
 	void set_color_map(const Ref<Image> &p_map);
 	Ref<Image> get_color_map() const { return _color_map; }
-	void set_compressed_color_map(const Ref<Image> &p_map);
-	Ref<Image> get_compressed_color_map() const { return _compressed_color_map; }
 	void sanitize_maps();
 	Ref<Image> sanitize_map(const MapType p_map_type, const Ref<Image> &p_map) const;
 	bool validate_map_size(const Ref<Image> &p_map) const;
@@ -102,12 +100,9 @@ public:
 	void set_vertex_spacing(const real_t p_vertex_spacing) { _vertex_spacing = CLAMP(p_vertex_spacing, 0.25f, 100.f); }
 	real_t get_vertex_spacing() const { return _vertex_spacing; }
 
-<<<<<<< HEAD
-=======
 	// File I/O
 	Error save(const String &p_path = "", const bool p_16_bit = false, const bool p_compressed_color_map = false);
 
->>>>>>> 5c972a1 (regions are marked as modified when use_compress_color_map is set)
 	// Working Data
 	void set_deleted(const bool p_deleted) { _deleted = p_deleted; }
 	bool is_deleted() const { return _deleted; }
@@ -117,9 +112,6 @@ public:
 	bool is_modified() const { return _modified; }
 	void set_location(const Vector2i &p_location);
 	Vector2i get_location() const { return _location; }
-
-	// File I/O
-	Error save(const String &p_path = "", const bool p_16_bit = false);
 
 	// Utility
 	void set_data(const Dictionary &p_data);
