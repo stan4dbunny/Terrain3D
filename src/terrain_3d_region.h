@@ -48,9 +48,6 @@ private:
 	Ref<Image> _height_map;
 	Ref<Image> _control_map;
 	Ref<Image> _color_map;
-
-	Ref<Image> _compressed_height_map;
-	Ref<Image> _compressed_control_map;
 	Ref<Image> _compressed_color_map;
 
 	// Instancer

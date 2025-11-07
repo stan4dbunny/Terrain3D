@@ -555,10 +555,9 @@ void Terrain3D::set_save_16_bit(const bool p_enabled) {
 	}
 }
 
-void Terrain3D::set_use_compressed_color_map(const bool p_enabled) {
-	LOG(INFO, p_enabled);
-	_use_compressed_color_map = p_enabled;
-
+void Terrain3D::set_compression_mode(const Image::CompressMode p_compression_mode) {
+	LOG(INFO, p_compression_mode);
+	_compression_mode = p_compression_mode;
 	TypedArray<Terrain3DRegion> regions = _data->get_regions_active();
 	for (int i = 0; i < regions.size(); i++) {
 		Ref<Terrain3DRegion> region = regions[i];
@@ -928,7 +927,7 @@ void Terrain3D::_notification(const int p_what) {
 			_setup_mouse_picking();
 			if (_free_editor_textures && !IS_EDITOR && _assets.is_valid() && !_assets->get_path().contains("Terrain3DAssets")) {
 				LOG(INFO, "free_editor_textures enabled, reloading Assets path: ", _assets->get_path());
-				_assets = ResourceLoader::get_singleton()->load(_assets->get_path(), "", ResourceLoader::CACHE_MODE_REPLACE);
+				_assets = ResourceLoader::get_singleton()->load(_assets->get_path(), "", ResourceLoader::CACHE_MODE_IGNORE);
 			}
 			_initialize(); // Rebuild anything freed: meshes, collision, instancer
 			set_physics_process(true);
