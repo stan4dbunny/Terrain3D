@@ -98,7 +98,7 @@ public:
 	real_t get_vertex_spacing() const { return _vertex_spacing; }
 
 	// File I/O
-	Error save(const String &p_path = "", const bool p_16_bit = false, const bool p_compressed_color_map = false);
+	Error save(const String &p_path = "", const bool p_16_bit = false, const Image::CompressMode p_color_compression_mode = Image::COMPRESS_MAX);
 
 	// Working Data
 	void set_deleted(const bool p_deleted) { _deleted = p_deleted; }

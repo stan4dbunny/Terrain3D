@@ -290,7 +290,7 @@ void Terrain3DRegion::set_location(const Vector2i &p_location) {
 	LOG(INFO, "Set location: ", p_location);
 }
 
-Error Terrain3DRegion::save(const String &p_path, const bool p_16_bit, const bool p_compressed_color_map) {
+Error Terrain3DRegion::save(const String &p_path, const bool p_16_bit, const Image::CompressMode p_color_compression_mode) {
 	// Initiate save to external file. The scene will save itself.
 	if (_location.x == INT32_MAX) {
 		LOG(ERROR, "Region has not been setup. Location is INT32_MAX. Skipping ", p_path);
@@ -313,13 +313,10 @@ Error Terrain3DRegion::save(const String &p_path, const bool p_16_bit, const boo
 	set_version(Terrain3DData::CURRENT_VERSION);
 	Error err = OK;
 
-	if (p_compressed_color_map) {
-		_compressed_color_map.unref();
+	if (p_color_compression_mode != Image::COMPRESS_MAX) {
 		_compressed_color_map = Image::create_empty(_color_map->get_width(), _color_map->get_height(), _color_map->has_mipmaps(), _color_map->get_format());
 		_compressed_color_map->copy_from(_color_map);
-		_compressed_color_map->compress(Image::COMPRESS_BPTC, Image::COMPRESS_SOURCE_SRGB);
-	} else {
-		_compressed_color_map.unref();
+		_compressed_color_map->compress_from_channels(p_color_compression_mode, Image::USED_CHANNELS_RGBA);
 	}
 	if (p_16_bit) {
 		Ref<Image> original_map;
@@ -479,7 +476,7 @@ void Terrain3DRegion::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_instances", "instances"), &Terrain3DRegion::set_instances);
 	ClassDB::bind_method(D_METHOD("get_instances"), &Terrain3DRegion::get_instances);
 
-	ClassDB::bind_method(D_METHOD("save", "path", "save_16_bit", "use_compressed_color_map"), &Terrain3DRegion::save, DEFVAL(""), DEFVAL(false));
+	ClassDB::bind_method(D_METHOD("save", "path", "save_16_bit", "color_compression_mode"), &Terrain3DRegion::save, DEFVAL(""), DEFVAL(false), DEFVAL(Image::COMPRESS_MAX));
 
 	ClassDB::bind_method(D_METHOD("set_deleted", "deleted"), &Terrain3DRegion::set_deleted);
 	ClassDB::bind_method(D_METHOD("is_deleted"), &Terrain3DRegion::is_deleted);
