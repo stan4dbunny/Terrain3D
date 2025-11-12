@@ -48,9 +48,6 @@ private:
 	Ref<Image> _height_map;
 	Ref<Image> _control_map;
 	Ref<Image> _color_map;
-
-	Ref<Image> _compressed_height_map;
-	Ref<Image> _compressed_control_map;
 	Ref<Image> _compressed_color_map;
 
 	// Instancer
@@ -84,6 +81,8 @@ public:
 	Ref<Image> get_control_map() const { return _control_map; }
 	void set_color_map(const Ref<Image> &p_map);
 	Ref<Image> get_color_map() const { return _color_map; }
+	void set_compressed_color_map(const Ref<Image> &p_map);
+	Ref<Image> get_compressed_color_map() const { return _compressed_color_map; }
 	void sanitize_maps();
 	Ref<Image> sanitize_map(const MapType p_map_type, const Ref<Image> &p_map) const;
 	bool validate_map_size(const Ref<Image> &p_map) const;
@@ -101,7 +100,7 @@ public:
 	real_t get_vertex_spacing() const { return _vertex_spacing; }
 
 	// File I/O
-	Error save(const String &p_path = "", const bool p_16_bit = false, const bool p_compressed_color_map = false);
+	Error save(const String &p_path = "", const bool p_16_bit = false, const Image::CompressMode p_color_compression_mode = Image::COMPRESS_MAX);
 
 	// Working Data
 	void set_deleted(const bool p_deleted) { _deleted = p_deleted; }

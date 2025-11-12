@@ -66,7 +66,6 @@ Ref<Image> Terrain3DRegion::get_map(const MapType p_map_type) const {
 			return get_control_map();
 		case TYPE_COLOR:
 			if (_compressed_color_map.is_valid() && !IS_EDITOR) {
-				const_cast<Ref<Image> &>(_color_map).unref();
 				return get_compressed_color_map();
 			}
 			return get_color_map();
@@ -158,17 +157,7 @@ void Terrain3DRegion::set_compressed_color_map(const Ref<Image> &p_map) {
 	if (_region_size == 0 && p_map.is_valid()) {
 		set_region_size(p_map->get_width());
 	}
-	Ref<Image> map = p_map;
-
-	if (map.is_valid() && !map->has_mipmaps()) {
-		map->generate_mipmaps();
-	}
-
-	// If already initialized and receiving a new map, or the map was sanitized
-	if (_compressed_color_map.is_valid() && _compressed_color_map != p_map || map != p_map) {
-		_modified = true;
-	}
-	_compressed_color_map = map;
+	_compressed_color_map = p_map;
 }
 
 void Terrain3DRegion::sanitize_maps() {
@@ -300,7 +289,7 @@ void Terrain3DRegion::set_location(const Vector2i &p_location) {
 	LOG(INFO, "Set location: ", p_location);
 }
 
-Error Terrain3DRegion::save(const String &p_path, const bool p_16_bit, const bool p_compressed_color_map) {
+Error Terrain3DRegion::save(const String &p_path, const bool p_16_bit, const Image::CompressMode p_color_compression_mode) {
 	// Initiate save to external file. The scene will save itself.
 	if (_location.x == INT32_MAX) {
 		LOG(ERROR, "Region has not been setup. Location is INT32_MAX. Skipping ", p_path);
@@ -321,17 +310,14 @@ Error Terrain3DRegion::save(const String &p_path, const bool p_16_bit, const boo
 	}
 	LOG(MESG, "Writing", (p_16_bit) ? " 16-bit" : "", " region ", _location, " to ", get_path());
 	set_version(Terrain3DData::CURRENT_VERSION);
+	_compressed_color_map.unref();
 	Error err = OK;
 
-	if (p_compressed_color_map) {
-		_compressed_color_map.unref();
+	if (p_color_compression_mode != Image::COMPRESS_MAX) {
 		_compressed_color_map = Image::create_empty(_color_map->get_width(), _color_map->get_height(), _color_map->has_mipmaps(), _color_map->get_format());
 		_compressed_color_map->copy_from(_color_map);
-		_compressed_color_map->compress(Image::COMPRESS_BPTC, Image::COMPRESS_SOURCE_SRGB);
-	} else {
-		_compressed_color_map.unref();
+		_compressed_color_map->compress_from_channels(p_color_compression_mode, Image::USED_CHANNELS_RGBA);
 	}
-
 	if (p_16_bit) {
 		Ref<Image> original_map;
 		original_map.instantiate();
@@ -385,6 +371,7 @@ Dictionary Terrain3DRegion::get_data() const {
 	dict["height_map"] = _height_map;
 	dict["control_map"] = _control_map;
 	dict["color_map"] = _color_map;
+	dict["_compressed_color_map"] = _compressed_color_map;
 	dict["instances"] = _instances;
 	return dict;
 }
@@ -491,7 +478,7 @@ void Terrain3DRegion::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_instances", "instances"), &Terrain3DRegion::set_instances);
 	ClassDB::bind_method(D_METHOD("get_instances"), &Terrain3DRegion::get_instances);
 
-	ClassDB::bind_method(D_METHOD("save", "path", "save_16_bit", "use_compressed_color_map"), &Terrain3DRegion::save, DEFVAL(""), DEFVAL(false));
+	ClassDB::bind_method(D_METHOD("save", "path", "save_16_bit", "color_compression_mode"), &Terrain3DRegion::save, DEFVAL(""), DEFVAL(false), DEFVAL(Image::COMPRESS_MAX));
 
 	ClassDB::bind_method(D_METHOD("set_deleted", "deleted"), &Terrain3DRegion::set_deleted);
 	ClassDB::bind_method(D_METHOD("is_deleted"), &Terrain3DRegion::is_deleted);
