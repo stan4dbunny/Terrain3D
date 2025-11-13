@@ -954,7 +954,7 @@ void Terrain3D::_notification(const int p_what) {
 					_assets->clear_textures();
 				}
 			}
-			if ((_color_compression_mode != Image::COMPRESS_MAX) && _free_uncompressed_color_maps && !IS_EDITOR && _assets.is_valid()) {
+			if ((_color_compression_mode != Image::COMPRESS_MAX) && _free_uncompressed_color_maps && !IS_EDITOR) {
 				LOG(INFO, "free_uncompressed_color_maps enabled, clearing uncompressed color maps");
 				free_uncompressed_color_maps();
 			}
