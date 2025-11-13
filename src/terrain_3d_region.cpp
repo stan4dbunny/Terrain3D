@@ -154,11 +154,23 @@ void Terrain3DRegion::set_color_map(const Ref<Image> &p_map) {
 }
 
 void Terrain3DRegion::set_compressed_color_map(const Ref<Image> &p_map) {
+	SET_IF_DIFF(_compressed_color_map, p_map);
 	LOG(INFO, "Setting compressed color map for region: ", (_location.x != INT32_MAX) ? String(_location) : "(new)");
 	if (_region_size == 0 && p_map.is_valid()) {
 		set_region_size(p_map->get_width());
 	}
+	// If already initialized and receiving a new map
+	if (_compressed_color_map.is_valid() && _compressed_color_map != p_map) {
+		_modified = true;
+	}
 	_compressed_color_map = p_map;
+}
+
+void Terrain3DRegion::free_uncompressed_color_map() {
+	LOG(INFO, "Freeing the uncompressed color map");
+	if (_color_map.is_valid()) {
+		_color_map.unref();
+	}
 }
 
 void Terrain3DRegion::sanitize_maps() {
@@ -313,8 +325,8 @@ Error Terrain3DRegion::save(const String &p_path, const bool p_16_bit, const Ima
 	set_version(Terrain3DData::CURRENT_VERSION);
 	Error err = OK;
 
-	if (p_color_compression_mode != Image::COMPRESS_MAX) {
-		_compressed_color_map = Image::create_empty(_color_map->get_width(), _color_map->get_height(), _color_map->has_mipmaps(), _color_map->get_format());
+	if (IS_EDITOR && p_color_compression_mode != Image::COMPRESS_MAX) {
+		_compressed_color_map = Image::create_from_data(_color_map->get_width(), _color_map->get_height(), _color_map->has_mipmaps(), _color_map->get_format(), _color_map->get_data());
 		_compressed_color_map->copy_from(_color_map);
 		_compressed_color_map->compress_from_channels(p_color_compression_mode, Image::USED_CHANNELS_RGBA);
 	}

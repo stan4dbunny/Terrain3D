@@ -1,27 +1,31 @@
 @tool
 extends EditorExportPlugin
-var terrain: Terrain3D
-var terrain_data: Terrain3DData
-var region: Terrain3DRegion
-var hashing: String
+
+var _hash: String
+
+
 func _get_name() -> String:
-	return "ExportPlugin"
+	return "Terrain3DExportPlugin"
+
 
 func _begin_customize_resources(platform: EditorExportPlatform, features: PackedStringArray) -> bool:
-	for feat in features:
-		hashing += feat
-	hashing += platform.to_string()
-	
+	_hash = ""
+	for feat: String in features:
+		_hash += feat
+	_hash += platform.to_string()
 	return true
 	
+	
 func _customize_resource(resource: Resource, path: String) -> Resource:
+	var _region: Terrain3DRegion
 	if resource is Terrain3DRegion:
-		region = resource
-		if region.compressed_color_map != null:
-			region.color_map = null
-			return region
+		_region = resource
+		if _region.compressed_color_map != null:
+			_region.color_map = null
+			return _region
 	return null
 	
+	
 func _get_customization_configuration_hash() -> int:
-	return hash(hashing)
+	return hash(_hash)
 	

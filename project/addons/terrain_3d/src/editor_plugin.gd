@@ -22,7 +22,6 @@ var mouse_global_position: Vector3 = Vector3.ZERO
 var godot_editor_window: Window # The Godot Editor window
 var viewport: SubViewport # Viewport the mouse was last in
 var mouse_in_main: bool = false # Helper to track when mouse is in the editor vp
-var export_plugin = ExportPlugin.new()
 
 # Terrain
 var terrain: Terrain3D
@@ -48,6 +47,7 @@ func _init() -> void:
 	# Get the Godot Editor window. Structure is root:Window/EditorNode/Base Control
 	godot_editor_window = EditorInterface.get_base_control().get_parent().get_parent()
 	godot_editor_window.focus_entered.connect(_on_godot_focus_entered)
+	
 	EditorInterface.get_inspector().mouse_entered.connect(func(): mouse_in_main = false)
 
 
@@ -80,6 +80,7 @@ func _exit_tree() -> void:
 	scene_changed.disconnect(_on_scene_changed)
 	godot_editor_window.focus_entered.disconnect(_on_godot_focus_entered)
 	remove_export_plugin(export_plugin)
+
 
 func _on_godot_focus_entered() -> void:
 	if debug > 1:

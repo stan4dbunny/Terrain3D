@@ -556,12 +556,21 @@ void Terrain3D::set_save_16_bit(const bool p_enabled) {
 }
 
 void Terrain3D::set_color_compression_mode(const Image::CompressMode p_color_compression_mode) {
+	SET_IF_DIFF(_color_compression_mode, p_color_compression_mode);
 	LOG(INFO, p_color_compression_mode);
 	_color_compression_mode = p_color_compression_mode;
 	TypedArray<Terrain3DRegion> regions = _data->get_regions_active();
 	for (int i = 0; i < regions.size(); i++) {
 		Ref<Terrain3DRegion> region = regions[i];
 		region->set_modified(true);
+	}
+}
+
+void Terrain3D::free_uncompressed_color_maps() {
+	TypedArray<Terrain3DRegion> regions = _data->get_regions_active();
+	for (int i = 0; i < regions.size(); i++) {
+		Ref<Terrain3DRegion> region = regions[i];
+		region->free_uncompressed_color_map();
 	}
 }
 
@@ -945,6 +954,10 @@ void Terrain3D::_notification(const int p_what) {
 					_assets->clear_textures();
 				}
 			}
+			if ((_color_compression_mode != Image::COMPRESS_MAX) && _free_uncompressed_color_maps && !IS_EDITOR && _assets.is_valid()) {
+				LOG(INFO, "free_uncompressed_color_maps enabled, clearing uncompressed color maps");
+				free_uncompressed_color_maps();
+			}
 			break;
 		}
 
@@ -1152,6 +1165,8 @@ void Terrain3D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_cull_margin"), &Terrain3D::get_cull_margin);
 	ClassDB::bind_method(D_METHOD("set_free_editor_textures"), &Terrain3D::set_free_editor_textures);
 	ClassDB::bind_method(D_METHOD("get_free_editor_textures"), &Terrain3D::get_free_editor_textures);
+	ClassDB::bind_method(D_METHOD("set_free_uncompressed_color_maps"), &Terrain3D::set_free_uncompressed_color_maps);
+	ClassDB::bind_method(D_METHOD("get_free_uncompressed_color_maps"), &Terrain3D::get_free_uncompressed_color_maps);
 	ClassDB::bind_method(D_METHOD("set_show_instances", "visible"), &Terrain3D::set_show_instances);
 	ClassDB::bind_method(D_METHOD("get_show_instances"), &Terrain3D::get_show_instances);
 
@@ -1218,7 +1233,7 @@ void Terrain3D::_bind_methods() {
 	ADD_GROUP("Regions", "");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "region_size", PROPERTY_HINT_ENUM, "64:64,128:128,256:256,512:512,1024:1024,2048:2048", PROPERTY_USAGE_EDITOR), "change_region_size", "get_region_size");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "save_16_bit"), "set_save_16_bit", "get_save_16_bit");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "color_compression_mode", PROPERTY_HINT_ENUM, "COMPRESS_S3TC,COMPRESS_ETC,COMPRESS_ETC2,COMPRESS_BPTC,COMPRESS_ASTC,COMPRESS_MAX"), "set_color_compression_mode", "get_color_compression_mode");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "color_compression_mode", PROPERTY_HINT_ENUM, "S3TC,ETC,ETC2,BPTC,ASTC,NONE"), "set_color_compression_mode", "get_color_compression_mode");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "label_distance", PROPERTY_HINT_RANGE, "0.0,10000.0,0.5,or_greater"), "set_label_distance", "get_label_distance");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "label_size", PROPERTY_HINT_RANGE, "24,128,1"), "set_label_size", "get_label_size");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "show_grid"), "set_show_region_grid", "get_show_region_grid");
@@ -1246,6 +1261,7 @@ void Terrain3D::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "gi_mode", PROPERTY_HINT_ENUM, "Disabled,Static,Dynamic"), "set_gi_mode", "get_gi_mode");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "cull_margin", PROPERTY_HINT_RANGE, "0.0,10000.0,.5,or_greater"), "set_cull_margin", "get_cull_margin");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "free_editor_textures"), "set_free_editor_textures", "get_free_editor_textures");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "free_uncompressed_color_maps"), "set_free_uncompressed_color_maps", "get_free_uncompressed_color_maps");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "show_instances"), "set_show_instances", "get_show_instances");
 
 	ADD_GROUP("Overlays", "show_");

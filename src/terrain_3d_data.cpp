@@ -377,11 +377,6 @@ void Terrain3DData::load_directory(const String &p_dir) {
 			LOG(ERROR, "Cannot load region at ", path);
 			continue;
 		}
-		if (region->get_compressed_color_map().is_valid() && !IS_EDITOR) {
-			Ref<Image> color_map = region->get_color_map();
-			RS->free_rid(color_map->get_rid());
-			color_map.unref();
-		}
 		LOG(INFO, "Loaded region: ", loc, " size: ", region->get_region_size());
 		if (_regions.is_empty()) {
 			_terrain->set_region_size((Terrain3D::RegionSize)region->get_region_size());
