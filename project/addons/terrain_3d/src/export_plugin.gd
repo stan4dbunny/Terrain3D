@@ -21,7 +21,7 @@ func _customize_resource(resource: Resource, path: String) -> Resource:
 	if resource is Terrain3DRegion:
 		_region = resource
 		if _region.compressed_color_map != null:
-			_region.color_map = null
+			_region.free_uncompressed_color_map()
 			return _region
 	return null
 	

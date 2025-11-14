@@ -148,7 +148,7 @@ void Terrain3DData::change_region_size(int p_new_size) {
 		new_region->set_region_size(p_new_size);
 		new_region->set_vertex_spacing(_vertex_spacing);
 		new_region->set_modified(true);
-		new_region->sanitize_maps();
+		new_region->sanitize_maps(false);
 
 		// Copy current data from current into new region, up to new region size
 		Rect2i area;
@@ -249,7 +249,11 @@ Error Terrain3DData::add_region(const Ref<Terrain3DRegion> &p_region, const bool
 				-REGION_MAP_SIZE / 2, " to ", REGION_MAP_SIZE / 2 - 1);
 		return FAILED;
 	}
-	p_region->sanitize_maps();
+	if (!IS_EDITOR && _terrain->get_color_compression_mode() != Image::COMPRESS_MAX) {
+		p_region->sanitize_maps(_terrain->get_free_uncompressed_color_maps());
+	} else {
+		p_region->sanitize_maps(false);
+	}
 	p_region->set_deleted(false);
 	if (!_region_locations.has(region_loc)) {
 		_region_locations.push_back(region_loc);
@@ -981,7 +985,7 @@ void Terrain3DData::import_images(const TypedArray<Image> &p_images, const Vecto
 					region->set_map(static_cast<MapType>(i), img_slice);
 				}
 			}
-			region->sanitize_maps();
+			region->sanitize_maps(false);
 		} // for x < slices_width
 	} // for y < slices_height
 	update_maps(TYPE_MAX, true, false);

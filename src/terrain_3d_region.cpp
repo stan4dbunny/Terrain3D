@@ -166,14 +166,7 @@ void Terrain3DRegion::set_compressed_color_map(const Ref<Image> &p_map) {
 	_compressed_color_map = p_map;
 }
 
-void Terrain3DRegion::free_uncompressed_color_map() {
-	LOG(INFO, "Freeing the uncompressed color map");
-	if (_color_map.is_valid()) {
-		_color_map.unref();
-	}
-}
-
-void Terrain3DRegion::sanitize_maps() {
+void Terrain3DRegion::sanitize_maps(bool p_free_uncompressed_color_maps) {
 	if (_region_size == 0) { // blank region, no set_*_map has been called
 		LOG(ERROR, "Set region_size first");
 		return;
@@ -188,6 +181,11 @@ void Terrain3DRegion::sanitize_maps() {
 		_modified = true;
 	}
 	_control_map = map;
+	if (p_free_uncompressed_color_maps) {
+		LOG(INFO, "Freeing the uncompressed color map");
+		_color_map.unref();
+		return;
+	}
 	map = sanitize_map(TYPE_COLOR, _color_map);
 	if (_color_map != map) {
 		_modified = true;
@@ -475,7 +473,7 @@ void Terrain3DRegion::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_color_map"), &Terrain3DRegion::get_color_map);
 	ClassDB::bind_method(D_METHOD("set_compressed_color_map", "map"), &Terrain3DRegion::set_compressed_color_map);
 	ClassDB::bind_method(D_METHOD("get_compressed_color_map"), &Terrain3DRegion::get_compressed_color_map);
-	ClassDB::bind_method(D_METHOD("sanitize_maps"), &Terrain3DRegion::sanitize_maps);
+	ClassDB::bind_method(D_METHOD("sanitize_maps", "free_uncompressed_color_maps"), &Terrain3DRegion::sanitize_maps);
 	ClassDB::bind_method(D_METHOD("sanitize_map", "map_type", "map"), &Terrain3DRegion::sanitize_map);
 	ClassDB::bind_method(D_METHOD("validate_map_size", "map"), &Terrain3DRegion::validate_map_size);
 

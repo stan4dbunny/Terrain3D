@@ -566,14 +566,6 @@ void Terrain3D::set_color_compression_mode(const Image::CompressMode p_color_com
 	}
 }
 
-void Terrain3D::free_uncompressed_color_maps() {
-	TypedArray<Terrain3DRegion> regions = _data->get_regions_active();
-	for (int i = 0; i < regions.size(); i++) {
-		Ref<Terrain3DRegion> region = regions[i];
-		region->free_uncompressed_color_map();
-	}
-}
-
 void Terrain3D::set_label_distance(const real_t p_distance) {
 	SET_IF_DIFF(_label_distance, CLAMP(p_distance, 0.f, 100000.f));
 	LOG(INFO, "Setting region label distance: ", _label_distance);
@@ -953,10 +945,6 @@ void Terrain3D::_notification(const int p_what) {
 					LOG(INFO, "free_editor_textures enabled, clearing texture assets");
 					_assets->clear_textures();
 				}
-			}
-			if ((_color_compression_mode != Image::COMPRESS_MAX) && _free_uncompressed_color_maps && !IS_EDITOR) {
-				LOG(INFO, "free_uncompressed_color_maps enabled, clearing uncompressed color maps");
-				free_uncompressed_color_maps();
 			}
 			break;
 		}

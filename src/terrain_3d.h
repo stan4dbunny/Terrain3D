@@ -165,7 +165,6 @@ public:
 	bool get_save_16_bit() const { return _save_16_bit; }
 	void set_color_compression_mode(const Image::CompressMode p_color_compression_mode);
 	Image::CompressMode get_color_compression_mode() const { return _color_compression_mode; }
-	void free_uncompressed_color_maps();
 	void set_label_distance(const real_t p_distance);
 	real_t get_label_distance() const { return _label_distance; }
 	void set_label_size(const int p_size);
