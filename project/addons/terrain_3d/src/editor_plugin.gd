@@ -22,6 +22,7 @@ var mouse_global_position: Vector3 = Vector3.ZERO
 var godot_editor_window: Window # The Godot Editor window
 var viewport: SubViewport # Viewport the mouse was last in
 var mouse_in_main: bool = false # Helper to track when mouse is in the editor vp
+var export_plugin = ExportPlugin.new()
 
 # Terrain
 var terrain: Terrain3D
