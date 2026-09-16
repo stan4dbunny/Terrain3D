@@ -639,7 +639,12 @@ void Terrain3DData::update_maps(const MapType p_map_type, const bool p_all_regio
 		for (const Vector2i &region_loc : _region_locations) {
 			const Terrain3DRegion *region = get_region_ptr(region_loc);
 			if (region) {
-				_color_maps.push_back(region->get_active_color_map());
+				Ref<Image> map = region->get_active_color_map();
+				if (map.is_null() || map->is_empty()) {
+					LOG(ERROR, "Region ", region_loc, " has no usable color map");
+					map = Util::get_filled_image(V2I(_region_size), COLOR_ROUGHNESS, true, FORMAT[TYPE_COLOR]);
+				}
+				_color_maps.push_back(map);
 			}
 		}
 		_generated_color_maps.create(_color_maps);
@@ -1131,8 +1136,7 @@ void Terrain3DData::import_images(const TypedArray<Image> &p_images, const Vecto
 					Ref<Image> region_map;
 					Ref<Image> existing_map = region->get_map(static_cast<MapType>(i));
 					if (existing_map.is_valid() && !existing_map->is_empty()) {
-						region_map.instantiate();
-						region_map->copy_from(existing_map);
+						region_map = existing_map->duplicate();
 						if (region_map->get_format() != img->get_format()) {
 							region_map->convert(img->get_format());
 						}

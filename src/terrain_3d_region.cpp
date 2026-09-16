@@ -197,6 +197,7 @@ void Terrain3DRegion::compress_color_map(const CompressMode p_compress_mode) {
 	}
 	if (p_compress_mode == COMPRESS_NONE) {
 		_last_color_compression = COMPRESS_NONE;
+		_compressed_color_map.unref();
 		return;
 	}
 	if (!IS_EDITOR) {
@@ -205,9 +206,7 @@ void Terrain3DRegion::compress_color_map(const CompressMode p_compress_mode) {
 	}
 	if (p_compress_mode >= COMPRESS_S3TC && p_compress_mode <= COMPRESS_ASTC) {
 		LOG(INFO, "Compressing color map with mode: ", p_compress_mode);
-		_compressed_color_map = Image::create_from_data(_color_map->get_width(), _color_map->get_height(),
-				_color_map->has_mipmaps(), _color_map->get_format(), _color_map->get_data());
-		_compressed_color_map->copy_from(_color_map);
+		_compressed_color_map = _color_map->duplicate();
 		_compressed_color_map->compress_from_channels(Image::CompressMode(p_compress_mode), Image::USED_CHANNELS_RGBA);
 		_modified = true;
 		_last_color_compression = p_compress_mode;
@@ -216,7 +215,7 @@ void Terrain3DRegion::compress_color_map(const CompressMode p_compress_mode) {
 
 void Terrain3DRegion::check_compressed_color_map(const CompressMode p_compress_mode) {
 	if (_last_color_compression != p_compress_mode) {
-		LOG(INFO, "Setting region ", _location, " modified as region compression mode differs from input setting");
+		LOG(INFO, "Setting region ", _location, " modified as loaded color compression mode differs from Terrain3D setting");
 		_modified = true;
 	}
 }
@@ -261,8 +260,7 @@ Ref<Image> Terrain3DRegion::sanitize_map(const MapType p_map_type, const Ref<Ima
 				map = p_map;
 			} else {
 				LOG(DEBUG, "Provided ", type_str, " map wrong format: ", p_map->get_format(), ". Converting copy to: ", format);
-				map.instantiate();
-				map->copy_from(p_map);
+				map = p_map->duplicate();
 				map->convert(format);
 				if (map->get_format() != format) {
 					LOG(DEBUG, "Cannot convert image to format: ", format, ". Creating blank ");
@@ -380,8 +378,7 @@ Error Terrain3DRegion::save(const String &p_path, const bool p_16_bit, const Com
 	Error err = OK;
 	if (p_16_bit) {
 		Ref<Image> original_map;
-		original_map.instantiate();
-		original_map->copy_from(_height_map);
+		original_map = _height_map->duplicate();
 		_height_map->convert(Image::FORMAT_RH);
 		err = ResourceSaver::get_singleton()->save(this, get_path(), ResourceSaver::FLAG_COMPRESS);
 		_height_map = original_map;

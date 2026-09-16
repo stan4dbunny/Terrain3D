@@ -216,8 +216,7 @@ Ref<Image> Terrain3DUtil::get_thumbnail(const Ref<Image> &p_image, const Vector2
 	LOG(INFO, "Drawing a thumbnail sized: ", size);
 	// Create a temporary work image scaled to desired width
 	Ref<Image> img;
-	img.instantiate();
-	img->copy_from(p_image);
+	img = p_image->duplicate();
 	img->resize(size.x, size.y, Image::INTERPOLATE_LANCZOS);
 
 	// Get minimum and maximum height values on the scaled image
