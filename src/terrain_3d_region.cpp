@@ -450,8 +450,8 @@ Ref<Terrain3DRegion> Terrain3DRegion::duplicate(const bool p_deep) {
 		// Resource duplicates
 		dict["height_map"] = _height_map->duplicate();
 		dict["control_map"] = _control_map->duplicate();
-		dict["color_map"] = _color_map->duplicate();
-		dict["compressed_color_map"] = is_color_compressed() ? _compressed_color_map->duplicate() : Ref<Resource>();
+		dict["color_map"] = _color_map.is_valid() ? _color_map->duplicate() : Ref<Resource>();
+		dict["compressed_color_map"] = _compressed_color_map.is_valid() ? _compressed_color_map->duplicate() : Ref<Resource>();
 		dict["instances"] = _instances.duplicate(true);
 		region->set_data(dict);
 	}
