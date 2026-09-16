@@ -82,11 +82,7 @@ Ref<Image> Terrain3DRegion::get_map(const MapType p_map_type) const {
 		case TYPE_CONTROL:
 			return _control_map;
 		case TYPE_COLOR:
-			if (!IS_EDITOR && is_color_compressed()) {
-				return *_compressed_color_map;
-			} else {
-				return *_color_map;
-			}
+			return _color_map;
 		default:
 			LOG(ERROR, "Requested map type ", p_map_type, ", is invalid");
 			return Ref<Image>();
@@ -100,11 +96,7 @@ Image *Terrain3DRegion::get_map_ptr(const MapType p_map_type) const {
 		case TYPE_CONTROL:
 			return *_control_map;
 		case TYPE_COLOR:
-			if (!IS_EDITOR && is_color_compressed()) {
-				return *_compressed_color_map;
-			} else {
-				return *_color_map;
-			}
+			return *_color_map;
 		default:
 			LOG(ERROR, "Requested map type ", p_map_type, ", is invalid");
 			return nullptr;
@@ -127,7 +119,7 @@ TypedArray<Image> Terrain3DRegion::get_maps() const {
 	TypedArray<Image> maps;
 	maps.push_back(_height_map);
 	maps.push_back(_control_map);
-	maps.push_back(!IS_EDITOR && is_color_compressed() ? _compressed_color_map : _color_map);
+	maps.push_back(_color_map);
 	return maps;
 }
 

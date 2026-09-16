@@ -288,14 +288,30 @@ Error Terrain3DData::add_region(const Ref<Terrain3DRegion> &p_region, const bool
 		return FAILED;
 	}
 	p_region->sanitize_maps();
-	// Free uncompressed color map in game if compressed map valid
-	if (!IS_EDITOR && _terrain->get_color_compress_mode() != COMPRESS_NONE && p_region->is_color_compressed()) {
-		p_region->clear_color_map();
-	} else {
-		// Free compressed color map in editor and verify current compression mode against loaded compression
+
+	// This block frees the compressed color map in editor, and optionally frees one map in game
+	//					Editor		Game
+	//	No compression	uc -co		uc -co
+	//	Compressed		uc -co		-uc co
+	//	Comp+keep		uc -co		uc co
+	if (IS_EDITOR) {
+		// Editor always keeps the editable uncompressed map and frees the compressed from memory
 		p_region->clear_compressed_color_map();
+		// Verifies current compression algorithm with what's saved on disk. The region is modified if different
 		p_region->check_compressed_color_map(_terrain->get_color_compress_mode());
+	} else {
+		// Runtime frees unneeded maps
+		const CompressMode mode = _terrain->get_color_compress_mode();
+		if (mode == COMPRESS_NONE) {
+			// No compression, clear compressed
+			p_region->clear_compressed_color_map();
+		} else if (!_terrain->get_keep_uncompressed_color() && p_region->is_color_compressed()) {
+			// Compression, clear uncompressed
+			p_region->clear_color_map();
+		}
+		// Else (compressed && keep), keep both maps
 	}
+
 	p_region->set_deleted(false);
 	if (!_region_locations.has(region_loc)) {
 		_region_locations.push_back(region_loc);
@@ -438,25 +454,27 @@ void Terrain3DData::load_directory(const String &p_dir) {
 		add_region(region, false);
 	}
 
-	LOG(INFO, "Verifying region color maps:");
+	/// Remove before merging
+	LOG(MESG, "Remove before merging:");
+	LOG(MESG, "Verifying region color maps:");
 	for (const Vector2i &region_loc : _region_locations) {
 		const Terrain3DRegion *region = get_region_ptr(region_loc);
 		if (region) {
 			Vector2i region_loc = region->get_location();
 			Ref<Image> map = region->get_color_map();
 			if (map.is_valid()) {
-				LOG(INFO, "Region ", region_loc, " color map size: ",
+				LOG(MESG, "Region ", region_loc, " color map size: ",
 						map->get_size(), " format: ", map->get_format());
 			} else {
-				LOG(INFO, "Region ", region_loc, " colormap: null");
+				LOG(MESG, "Region ", region_loc, " colormap: null");
 			}
 
 			map = region->get_compressed_color_map();
 			if (map.is_valid()) {
-				LOG(INFO, "Region ", region_loc, " compressed color map size: ",
+				LOG(MESG, "Region ", region_loc, " compressed color map size: ",
 						map->get_size(), " format: ", map->get_format());
 			} else {
-				LOG(INFO, "Region ", region_loc, " compressed colormap: null");
+				LOG(MESG, "Region ", region_loc, " compressed colormap: null");
 			}
 		}
 	}
@@ -514,14 +532,17 @@ TypedArray<Image> Terrain3DData::get_maps(const MapType p_map_type) const {
 }
 
 void Terrain3DData::update_maps(const MapType p_map_type, const bool p_all_regions, const bool p_generate_mipmaps) {
-	// Generate region color mipmaps
+	// Generate region color mipmaps if requested
 	if (p_generate_mipmaps && (p_map_type == TYPE_COLOR || p_map_type == TYPE_MAX)) {
 		LOG(EXTREME, "Regenerating color mipmaps");
 		for (const Vector2i &region_loc : _regions.keys()) {
 			Terrain3DRegion *region = get_region_ptr(region_loc);
 			// Generate all or only those marked edited
 			if (region && !region->is_deleted() && (p_all_regions || region->is_edited())) {
-				region->get_color_map()->generate_mipmaps();
+				Ref<Image> map = region->get_color_map();
+				if (map.is_valid()) {
+					map->generate_mipmaps();
+				}
 			}
 		}
 	}

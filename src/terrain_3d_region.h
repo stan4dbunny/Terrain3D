@@ -167,7 +167,7 @@ inline void Terrain3DRegion::update_heights(const Vector2 &p_low_high) {
 }
 
 inline Ref<Image> Terrain3DRegion::get_active_color_map() const {
-	if (!IS_EDITOR && _compressed_color_map.is_valid()) {
+	if (!IS_EDITOR && is_color_compressed()) {
 		return _compressed_color_map;
 	}
 	return _color_map;
